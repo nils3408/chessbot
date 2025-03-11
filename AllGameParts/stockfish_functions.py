@@ -168,24 +168,24 @@ def get_field_from_stockfish_notation(x,y, player_color)-> Tuple[int, int]:
 
 
 def convert_move(move, board, player_color):
-    #stockfish returns move in the following: <oldfield><newfield> , f.e e2e4
+    #stockfish returns move in the following: <oldfield><newfield> , f.e e2e4 # e2e1b
     # howvever we need to return the following: (piece, new_field= Tuple[int, int])
 
+    #normally move is 4 chars long
+    #only exeption: it is a promotion move: fith char to descripe with Piece pawn should be promoted to
 
-    if len(move)!=4:
+    if len(move)!=4 and len(move) != 5:
         raise Exception ("stockfish move is not 4 chars long")
 
 
     new_field= get_field_from_stockfish_notation(move[2],move[3], player_color)
     old_field= get_field_from_stockfish_notation(move[0], move[1], player_color)
-
     x,y=old_field
     piece=board[x][y]
-    print(move)
-    print((x,y))
-    printBoard(board)
 
-    return (piece, new_field)
+    newPieceType="Q" if len(move)==4 else move[4].upper()
+
+    return (piece, new_field, newPieceType)
 
     
 

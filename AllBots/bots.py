@@ -65,5 +65,6 @@ class HardBot(Bot):
         self.stockfish.set_fen_position(fen)
         move=self.stockfish.get_best_move(8000) #max thinking time of computer
         move2=convert_move(move, board, player_color)
+        #piece,newField, newPiece= move2
         return move2
 

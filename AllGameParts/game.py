@@ -164,7 +164,7 @@ class Game:
         return (y==0 or y==7)
 
 
-    def pawn_make_transition(self, piece:Figur):
+    def pawn_make_transition(self, piece:Figur, player_color, newPieceType, GameMode):
         #pawn transforms into {Queen, Rook, Bishop, Knight}
         possible_figures = [
             Rook(piece.color,   piece.id,  piece.position),
@@ -173,9 +173,22 @@ class Game:
             Queen (piece.color, piece.id, piece.position)
         ]
 
-        new_piece_type= self.choose_new_figur(possible_figures)
-        index= self.all_figures.index (piece)
-        self.all_figures[index]= new_piece_type(piece.color, piece.id, piece.position)
+        #if player makes the move: open Meny,
+        # if bot makes move: do not open it- promote based on given input
+        if player_color == piece.color or GameMode== "2Player":
+            new_piece_type= self.choose_new_figur(possible_figures)
+            index = self.all_figures.index(piece)
+            self.all_figures[index] = new_piece_type(piece.color, piece.id, piece.position)
+            return
+
+        else:
+            promotion_map = { "R": Rook, "N": Knight, "B": Bishop, "Q": Queen}
+
+            if newPieceType in promotion_map:
+                index = self.all_figures.index(piece)
+                self.all_figures[index] = promotion_map[newPieceType](piece.color, piece.id, piece.position)
+            else:
+                raise Exception("Error in make_move at pawn promotion. piece_type does not match possibilities")
 
 
 
@@ -317,7 +330,7 @@ class Game:
         return False
 
 
-    def makeMove(self, moving_piece: Figur, position_to_move: Tuple[int, int], player_color: str, is_capturing_move: bool, all_pieces: List[Figur], target_piece: Optional[Figur] = None):
+    def makeMove(self, moving_piece: Figur, position_to_move: Tuple[int, int], player_color: str, is_capturing_move: bool, all_pieces: List[Figur], GameMode,newPieceType="Q"  ):
         oldPieceType = moving_piece.type
 
         # Capturing Move
@@ -345,7 +358,7 @@ class Game:
 
         # Check for pawn promotion
         if moving_piece.type == "P" and self.pawn_reaches_end(moving_piece):
-            self.pawn_make_transition(moving_piece)
+            self.pawn_make_transition(moving_piece, player_color, newPieceType, GameMode)
 
         self.add_to_movelist(oldPieceType ,old_position,moving_piece.getPosition(), moving_piece.type)
 
@@ -391,7 +404,7 @@ class Game:
  #----------------------------------------------------------------------------------------------------------------------
  # ---------------------------------------------------------------------------------------------------------------------
     def run_2_player(self, player_color):
-
+        Gamemode= "2Player"
         visual.draw_complete_display(self.all_figures)
         self.update_full_board ()
         self.game_status=True
@@ -417,7 +430,7 @@ class Game:
                             # an other piece is selected
                             # 1. it is a capturing move, 2. selecting a new piece
                             if(self.is_valid_move(self.last_selected_piece, player_color) and self.color_to_move == self.last_selected_piece.color):
-                                self.makeMove(self.last_selected_piece, (self.board_pos_selected_x, self.board_pos_selected_y),player_color, True, self.all_figures)
+                                self.makeMove(self.last_selected_piece, (self.board_pos_selected_x, self.board_pos_selected_y),player_color, True, self.all_figures, Gamemode)
                                 self.update_full_board()
                                 visual.draw_complete_display(self.all_figures)
 
@@ -431,7 +444,7 @@ class Game:
                     else:
                         #an empty tile is selected
                         if(self.is_valid_move(self.last_selected_piece, player_color)) and self.last_selected_piece.color == self.color_to_move:
-                            self.makeMove(self.last_selected_piece, (self.board_pos_selected_x, self.board_pos_selected_y),player_color, False, self.all_figures)
+                            self.makeMove(self.last_selected_piece, (self.board_pos_selected_x, self.board_pos_selected_y),player_color, False, self.all_figures, Gamemode)
                             visual.draw_complete_display(self.all_figures)
 
                         else:
@@ -450,6 +463,7 @@ class Game:
 
    # In game.py, within the Game class
     def run_Singel_player(self, player_color, bot : Bot):
+        GameMode= "1Player"
         visual.draw_complete_display(self.all_figures)
         self.update_full_board()
         print(player_color)
@@ -486,7 +500,7 @@ class Game:
                                 # an other piece is selected
                                 # 1. it is a capturing move, 2. selecting a new piece
                                 if(self.is_valid_move(self.last_selected_piece, player_color)) and self.color_to_move == self.last_selected_piece.color:
-                                    self.makeMove(self.last_selected_piece, (self.board_pos_selected_x, self.board_pos_selected_y),player_color, True, self.all_figures)
+                                    self.makeMove(self.last_selected_piece, (self.board_pos_selected_x, self.board_pos_selected_y),player_color, True, self.all_figures, GameMode)
                                     self.update_full_board()
                                     visual.draw_complete_display(self.all_figures)
                                     player_to_play = 2
@@ -501,7 +515,7 @@ class Game:
                         else:
                             #an empty tile is selected
                             if(self.is_valid_move(self.last_selected_piece, player_color)) and self.color_to_move == self.last_selected_piece.color:
-                                self.makeMove(self.last_selected_piece, (self.board_pos_selected_x, self.board_pos_selected_y),player_color, False, self.all_figures)
+                                self.makeMove(self.last_selected_piece, (self.board_pos_selected_x, self.board_pos_selected_y),player_color, False, self.all_figures, GameMode)
                                 visual.draw_complete_display(self.all_figures)
                                 player_to_play = 2
                             else:
@@ -509,20 +523,10 @@ class Game:
                                 visual.draw_complete_display(self.all_figures)                  
                 else:
 
-                    #bot.reset_bitboards()
-                    #self.update_piece_map()
-                    #bot.update_piece_map(self.piece_map)
-                    #best_Move = bot.get_next_move()
-                    #self.bot_makeMove(bot.get_next_move())
-                    #print(best_Move)
-                    #self.bot_makeMove(best_Move)
 
-
-                    figur,move= bot.chooseMoves(self.all_figures, self.board, player_color, self.move_list)
+                    figur,move, newPieceType= bot.chooseMoves(self.all_figures, self.board, player_color, self.move_list)
                     isCap= self.is_capturingMove (figur, self.get_piece_at_position (move[0], move[1]))
-                    self.makeMove(figur, move, player_color,
-                                  isCap,
-                                  self.all_figures, )
+                    self.makeMove(figur, move, player_color,isCap,self.all_figures, newPieceType)
 
                     self.update_full_board()
                     self.update_piece_map()

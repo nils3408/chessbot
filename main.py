@@ -61,8 +61,6 @@ def main():
         # Update the piece map for the game
         game.update_piece_map ()
         # debug:
-        print (bot.get_bitboards_black ())
-        print (bot.get_bitboards_white ())
 
 
         make_a_game= True
